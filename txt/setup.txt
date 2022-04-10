@@ -1,0 +1,9 @@
+Use the confluent-kafka Python client.
+
+Run kafka using Linux Ubuntu LTS under WSL2 according to:
+https://www.confluent.io/blog/set-up-and-run-kafka-on-windows-linux-wsl-2/#install-wsl-2
+
+To access the kafka cluster running in WSL2, in $KAFKA_HOME/config/server.properties,
+include the line "listeners=PLAINTEXT://[::1]:9092". This uses IPv6 loopback address.
+
+When issuing commands to the kafka cluster, use the host:port [::1]:9092.

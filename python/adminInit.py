@@ -5,8 +5,14 @@ from confluent_kafka.admin import NewTopic
 from printAttr import printAttr
 
 if __name__ == "__main__":
+    # Socket address with which to access kafka cluster
+    socketAddress = "[::1]:9092"
+
     # Create an admin client. Specify server.
-    ac = AdminClient({"bootstrap.servers":"localhost:9092"})
+    ac = AdminClient({"bootstrap.servers":socketAddress})
+
+    # Sample topic name:
+    topicName = "test_topic"
 
     # Dictionary of topics on the cluster.
     topics = ac.list_topics().topics
@@ -15,19 +21,15 @@ if __name__ == "__main__":
         print(f"    {topic}")
 
     # Create a topic. This is an async operation.
-    if "test_topic" not in topics.keys():
-        dctFuture = ac.create_topics([NewTopic("test_topic", 1)])
-        future = dctFuture["test_topic"]
+    if topicName not in topics.keys():
+        dctFuture = ac.create_topics([NewTopic(topicName, 1)])
+        future = dctFuture[topicName]
         future.result()     # Block until topic has been created
-        print("Created topic \"test_topic\"")
-    else:
-        dctFuture = ac.delete_topics(["test_topic"])
-        future = dctFuture["test_topic"]
-        future.result()
-        print("Deleted topic \"test_topic\"")
+        print(f"Created topic {topicName}")
 
-    ## Delete a topic.
-    #dctFuture = ac.delete_topics(["test_topic"])
-    #future = dctFuture["test_topic"]
-    #print(future.done())
-    #future.result()
+    topics = ac.list_topics().topics
+    if topicName in topics.keys():
+        dctFuture = ac.delete_topics([topicName])
+        future = dctFuture[topicName]
+        future.result()
+        print(f"Deleted topic {topicName}")

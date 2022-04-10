@@ -1,0 +1,4 @@
+Use the confluent-kafka Python client.
+
+Use Windows Subsystem for Linux according to:
+https://www.confluent.io/blog/set-up-and-run-kafka-on-windows-linux-wsl-2/#install-wsl-2

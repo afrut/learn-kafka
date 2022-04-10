@@ -1,0 +1,5 @@
+# Convenient powershell commands
+
+# For testing producerFileText.py
+watchFiles.ps1 -Command python -Arguments "config.ini ./resources/a-scandal-in-bohemia.txt"
+python producerFileText.py config.ini ./resources/a-scandal-in-bohemia.txt

@@ -6,6 +6,8 @@ from argparse import ArgumentParser, FileType
 from configparser import ConfigParser
 from confluent_kafka import Producer
 from time import sleep
+from initTopic import initTopic
+from datetime import datetime
 
 if __name__ == "__main__":
     # Parse the command line.
@@ -30,7 +32,7 @@ if __name__ == "__main__":
         if err:
             print('ERROR: Message failed delivery: {}'.format(err))
         else:
-            print(f"Sent {msg.value().decode('utf-8')}")
+            print(f"    {datetime.now()}: Sent {msg.value().decode('utf-8')}", end = "")
 
     # Read a file as data source.
     lines = args.data_file.readlines()
@@ -39,19 +41,19 @@ if __name__ == "__main__":
     # Produce data by selecting random values from these lists.
     topic = "lines-of-text"
 
-    #while True:
-    nMsg = randint(0, 20)
-    print(f"Sending {nMsg} messages")
-    for _ in range(nMsg):
-        producer.produce(topic, lines[randint(0, N)], callback=delivery_callback)
+    initTopic("lines-of-text")
 
-    # Send messages. Once message is sent, execute callback function
-    producer.poll(10000)
+    while True:
+        nMsg = randint(1, 20)
+        print(f"{datetime.now()}: Sending {nMsg} messages")
+        for _ in range(nMsg):
+            producer.produce(topic, choice(lines), callback=delivery_callback)
 
-    # Block until the messages are sent. Not strictly necessary for fire and forget.
-    producer.flush()
+        # Send messages. Once message is sent, execute callback function
+        producer.poll(10000)
 
-    # Sleep for a random number of seconds
-    sleep(randint(0,3))
+        # Block until the messages are sent. Not strictly necessary for fire and forget.
+        producer.flush()
 
-    print(lines[50].decode('byte'))
+        # Sleep for a random number of seconds
+        sleep(randint(1,3))

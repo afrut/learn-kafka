@@ -1,6 +1,5 @@
-#exec(open("producerFileText.py").read())
+#exec(open("producerRandInt.py").read())
 import sys
-from random import choice
 from random import randint
 from argparse import ArgumentParser, FileType
 from configparser import ConfigParser
@@ -13,7 +12,6 @@ if __name__ == "__main__":
     # Parse the command line.
     parser = ArgumentParser()
     parser.add_argument('config_file', type=FileType('r'))
-    parser.add_argument('data_file', type=FileType('r', encoding='utf-8'))
     args = parser.parse_args()
 
     # Parse the configuration.
@@ -32,14 +30,11 @@ if __name__ == "__main__":
         if err:
             print('ERROR: Message failed delivery: {}'.format(err))
         else:
-            print(f"    {datetime.now()}: Sent {msg.value().decode('utf-8')}", end = "")
-
-    # Read a file as data source.
-    lines = args.data_file.readlines()
-    N = len(lines) - 1
+            isent = int.from_bytes(msg.value(), "little")
+            print(f"    {datetime.now()}: Sent {isent}")
 
     # Produce data by selecting random values from these lists.
-    topic = "lines-of-text"
+    topic = "rand_ints"
 
     initTopic(topic)
 
@@ -47,7 +42,9 @@ if __name__ == "__main__":
         nMsg = randint(1, 20)
         print(f"{datetime.now()}: Sending {nMsg} messages")
         for _ in range(nMsg):
-            producer.produce(topic, choice(lines), callback=delivery_callback)
+            i = randint(0, 100)
+            ib = int.to_bytes(i, 1, "little")
+            producer.produce(topic, ib, callback=delivery_callback)
 
         # Send messages. Once message is sent, execute callback function
         producer.poll(10000)

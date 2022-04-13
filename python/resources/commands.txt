@@ -3,3 +3,4 @@
 # For testing producerFileText.py
 watchFiles.ps1 -Command python -Arguments "./python/config.ini ./python/resources/a-scandal-in-bohemia.txt" -FileFilters "^.+\.py$" -Clear
 python python/producerFileText.py ./python/config.ini ./python/resources/a-scandal-in-bohemia.txt
+python python/producerRandInt.py ./python/config.ini

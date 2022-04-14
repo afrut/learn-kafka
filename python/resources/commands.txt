@@ -1,6 +1,16 @@
 # Convenient powershell commands
 
+# For testing producerSimple.py
+python python/producerSimple.py ./python/config.ini
+
 # For testing producerFileText.py
 watchFiles.ps1 -Command python -Arguments "./python/config.ini ./python/resources/a-scandal-in-bohemia.txt" -FileFilters "^.+\.py$" -Clear
 python python/producerFileText.py ./python/config.ini ./python/resources/a-scandal-in-bohemia.txt
+
+# For testing producerRandInt.py
+watchFiles.ps1 -Command python -Arguments "./python/config.ini" -FileFilters "^.+\.py$" -Clear
 python python/producerRandInt.py ./python/config.ini
+
+# For Testing consumerSimple.py
+watchFiles.ps1 -Command python -Arguments "./python/config.ini" -FileFilters "^.+\.py$" -Clear
+python python/consumerSimple.py ./python/config.ini

@@ -1,25 +1,18 @@
 #exec(open("producerSimple.py").read())
-import sys
+#python producerSimple.py
 from random import choice
 from argparse import ArgumentParser, FileType
 from configparser import ConfigParser
 from confluent_kafka import Producer
-from time import sleep
 
 if __name__ == "__main__":
     # Parse the command line.
     parser = ArgumentParser()
-    parser.add_argument('config_file', type=FileType('r'))
+    parser.add_argument("-s", "--server", default = "[::1]:9092")
     args = parser.parse_args()
 
-    # Parse the configuration.
-    # See https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
-    config_parser = ConfigParser()
-    config_parser.read_file(args.config_file)
-    config = dict(config_parser['default'])
-
     # Create Producer instance
-    producer = Producer(config)
+    producer = Producer({"bootstrap.servers": args.server})
 
     # Optional per-message delivery callback (triggered by poll() or flush())
     # when a message has been successfully delivered or permanently
@@ -38,14 +31,13 @@ if __name__ == "__main__":
 
     count = 0
     for _ in range(10):
-
         user_id = choice(user_ids)
         product = choice(products)
-        producer.produce(topic, product, user_id, callback=delivery_callback)
+        producer.produce(topic, product, user_id, callback = delivery_callback)
         count += 1
 
-    # Send messages. Once message is sent, execute callback function
-    producer.poll(10000)
+    # Send messages. Once message is sent, execute callback function.
+    producer.poll(1)
 
-    # Block until the messages are sent. Not strictly necessary for fire and forget.
+    # Convenience function. Block until the messages are sent.
     producer.flush()

@@ -1,23 +1,21 @@
-import sys
+#python consumerSimple.py
 from argparse import ArgumentParser, FileType
 from configparser import ConfigParser
 from confluent_kafka import Consumer, OFFSET_BEGINNING
+from time import sleep
 
 if __name__ == '__main__':
     # Parse the command line.
     parser = ArgumentParser()
-    parser.add_argument('config_file', type=FileType('r'))
-    parser.add_argument('--reset', action='store_true')
+    parser.add_argument("-s", "--server", default = "[::1]:9092")
+    parser.add_argument("-r", "--reset", action = "store_true")
     args = parser.parse_args()
 
-    # Parse the configuration.
-    # See https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
-    config_parser = ConfigParser()
-    config_parser.read_file(args.config_file)
-    config = dict(config_parser['default'])
-    config.update(config_parser['consumer'])
-
     # Create Consumer instance
+    config = {"bootstrap.servers": args.server
+        ,"group.id": "consumerSimple"
+        # Which offset to start reading when no committed offsets exist.
+        ,"auto.offset.reset": "earliest"}
     consumer = Consumer(config)
 
     # Set up a callback to handle the '--reset' flag.
@@ -28,8 +26,8 @@ if __name__ == '__main__':
             consumer.assign(partitions)
 
     # Subscribe to topic
-    topics = ["test", "lines_of_text", "rand_ints"]
-    consumer.subscribe(topics, on_assign=reset_offset)
+    topics = ["test"]
+    consumer.subscribe(topics, on_assign = reset_offset)
 
     # Poll for new messages from Kafka and print them.
     try:
@@ -52,6 +50,7 @@ if __name__ == '__main__':
                 print("Consumed event from topic {topic}: key = {key:12} value = {value:12}".format(
                     topic=msg.topic(), key=key, value=msg.value().decode('utf-8')))
     except KeyboardInterrupt:
+        print(consumer.assignment())
         pass
     finally:
         # Leave group and commit final offsets

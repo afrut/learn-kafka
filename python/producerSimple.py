@@ -1,5 +1,5 @@
 #exec(open("producerSimple.py").read())
-#python producerSimple.py
+#python producerSimple.py --num_records 10 --poll
 from random import choice
 from argparse import ArgumentParser, FileType
 from configparser import ConfigParser
@@ -9,6 +9,8 @@ if __name__ == "__main__":
     # Parse the command line.
     parser = ArgumentParser()
     parser.add_argument("-s", "--server", default = "[::1]:9092")
+    parser.add_argument("-n", "--num_records", default = 10, type = int)
+    parser.add_argument("-p", "--poll", action = "store_true")
     args = parser.parse_args()
 
     # Create Producer instance
@@ -29,15 +31,14 @@ if __name__ == "__main__":
     user_ids = ['eabara', 'jsmith', 'sgarcia', 'jbernard', 'htanaka', 'awalther']
     products = ['book', 'alarm clock', 't-shirts', 'gift card', 'batteries']
 
-    count = 0
-    for _ in range(10):
+    for _ in range(args.num_records):
         user_id = choice(user_ids)
         product = choice(products)
         producer.produce(topic, product, user_id, callback = delivery_callback)
-        count += 1
 
     # Send messages. Once message is sent, execute callback function.
-    producer.poll(1)
+    if args.poll:
+        print(producer.poll(1))
 
     # Convenience function. Block until the messages are sent.
     producer.flush()

@@ -1,0 +1,12 @@
+Using confluent-kafka's Producer, do you need to call producer.poll()?
+confluent_kafka is built on librdkafka. In librdkafka, the producer has a
+produce queue to batch messages. When this queue fills up, all messages are sent
+to the broker. Calling producer.poll() enables the developer to send the
+messages in the batch even when the queue is not full.
+    - Run a consumer: python consumerSimple.py
+    - Produce 10 records without polling and observe that the consumer does not receive anything
+        - python producerSimple.py --num_records 10
+    - Produce 10000 records without polling and observe that the consumer receives messages
+        - python producerSimple.py --num_records 10000
+    - Produce 10 records with polling and observe that the consumer receives messages
+        - python producerSimple.py --num_records 10 --poll

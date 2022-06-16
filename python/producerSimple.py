@@ -37,8 +37,9 @@ if __name__ == "__main__":
         producer.produce(topic, product, user_id, callback = delivery_callback)
 
     # Send messages. Once message is sent, execute callback function.
+    # Asynchronous sends.
     if args.poll:
         print(producer.poll(1))
 
-    # Convenience function. Block until the messages are sent.
+    # Convenience function. Block until the messages are sent. Synchronous send.
     producer.flush()

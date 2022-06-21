@@ -11,6 +11,7 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--server", default = "[::1]:9092")
     parser.add_argument("-n", "--num_records", default = 10, type = int)
     parser.add_argument("-p", "--poll", action = "store_true")
+    parser.add_argument("-f", "--flush", action = "store_true")
     args = parser.parse_args()
 
     # Create Producer instance
@@ -42,4 +43,5 @@ if __name__ == "__main__":
         print(producer.poll(1))
 
     # Convenience function. Block until the messages are sent. Synchronous send.
-    producer.flush()
+    if args.flush:
+        producer.flush()

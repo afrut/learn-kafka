@@ -1,4 +1,5 @@
 #python partitionDemo.py
+#exec(open("partitionDemo.py").read())
 import threading
 import time
 import random
@@ -23,6 +24,7 @@ if __name__ == "__main__":
     lock = threading.Lock()                                     # lock for output dictionary partitionKeyCounts
     numTrials = 5                                               # number of trials to execute
     trials = list()                                             # list containing partition count for each trial
+    outputFile = ".\\txt\\learn.partition.counts.txt"
 
     # ----------------------------------------
     #  Initialization
@@ -124,6 +126,7 @@ if __name__ == "__main__":
             thread.join()
 
     producer = Producer({"bootstrap.servers": server
+        # ,"partitioner": "consistent"
     })
     users = ["eabara", "jsmith", "sgarcia", "jbernard", "htanaka", "awalther", "mscott", "dschrute", "jhalpert", "pbeesly", "jlevinson", "ehannon", "abernard", "tflenderson", "kmalone", "amartin", "shudson", "rhoward"]
     products = ["book", "alarm clock", "t-shirts", "gift card", "batteries"]
@@ -162,25 +165,54 @@ if __name__ == "__main__":
             stop(threads)
             trials.append(partitionKeyCounts)
 
+    logging.info("Trials done.")
+
     # ----------------------------------------
     #  Output Assertion
     # ----------------------------------------
-    for partitionKeyCounts in trials:
-        for partition, keyCounts in partitionKeyCounts:
-            keys = keyCounts.keys()
-
-    # ----------------------------------------
-    #  Display
-    # ----------------------------------------
-    logging.info(f"Partition key counts:")
+    dct = dict()
     for trialNum in range(numTrials):
-        logging.info(f"    {trialNum}----------------------------------------")
-        for partitionNum, keyCounts in sorted(trials[trialNum].items()):
-            logging.info(f"        {partitionNum}:")
-            for key_, value_ in sorted(keyCounts.items()):
-                logging.info(f"            {key_}: {value_}")
+        dct[trialNum] = dict()
 
-    logging.info("Done.")
+        # Get a list of all keys in every partition
+        keys = list()
+        for partition, keyCounts in trials[trialNum].items():
+
+            # List of keys in this trial and partition
+            ls = list(keyCounts.keys())
+
+            # For each key in this trial, create a list of partitions that it
+            # was found in
+            if len(ls) > 0:
+                for key in ls:
+                    if key in dct[trialNum]:
+                        dct[trialNum][key].append(partition)
+                    else:
+                        dct[trialNum][key] = [partition]
+
+            # Append list of keys in this partition to key sin this trial
+            keys = keys + ls
+
+        # Check for duplication
+        if len(keys) == len(set(keys)):
+            print(f"    Trial {trialNum} PASS.")
+        else:
+            print(f"    Trial {trialNum} FAIL.")
+            for key, partitionsFound in dct[trialNum].items():
+                if len(partitionsFound) > 1:
+                    print(f"        Key {key} found in partitions {partitionsFound}.")
+
+    # ----------------------------------------
+    #  Output
+    # ----------------------------------------
+    with open(outputFile, "wt") as fl:
+        fl.write(f"Key counts:\n")
+        for trialNum in range(numTrials):
+            fl.write(f"    Trial {trialNum}----------------------------------------\n")
+            for partitionNum, keyCounts in sorted(trials[trialNum].items()):
+                fl.write(f"        Partition {partitionNum}:\n")
+                for k, v in sorted(keyCounts.items()):
+                    fl.write(f"            {k}: {v}\n")
 
     # NOTE: Refer to partitioner entry in
     # https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md for

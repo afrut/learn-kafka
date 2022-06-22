@@ -1,25 +1,23 @@
 #python partitionDemo.py
 #exec(open("partitionDemo.py").read())
 import threading
-import time
 import random
 import logging
 import datetime
-import json
 from confluent_kafka.admin import AdminClient
 from confluent_kafka.admin import NewTopic
 from confluent_kafka.cimpl import KafkaException
 from confluent_kafka import Producer
 from confluent_kafka import Consumer
+from confluent_kafka import TopicPartition
 
 if __name__ == "__main__":
     server = "[::1]:9092"                                       # kafka server
     topic = "learn.partition"                                   # topic name
     numPartitions = 5                                           # number of partitions in topic
     group = "learn.partition.consumers"                         # group name for consumers
-    numConsumers = 5                                            # number of consumers to start
     numRecords = 10                                             # number of records to produce per flush
-    runTime = 5                                                 # number of seconds to continually produce
+    runTime = 60                                                # number of seconds to continually produce
     init = True                                                 # delete and re-create topic
     lock = threading.Lock()                                     # lock for output dictionary partitionKeyCounts
     numTrials = 5                                               # number of trials to execute
@@ -35,8 +33,7 @@ if __name__ == "__main__":
     logging.basicConfig(format = fmt, level = logging.INFO, datefmt = datefmt)
 
     # Create admin client
-    ac = AdminClient({"bootstrap.servers": server
-    })
+    ac = AdminClient({"bootstrap.servers": server})
 
     # Try to delete the topic
     if init:
@@ -71,10 +68,13 @@ if __name__ == "__main__":
         , "group.id": group
         , "auto.offset.reset": "earliest"}
 
-    def consumerThread(config: dict):
+    def consumerThread(num: int, config: dict):
         global run, lock, partitionKeyCounts
         consumer = Consumer(config)
-        consumer.subscribe([topic])
+        # Manually assign a partition to the consumer instead of subscribing.
+        # When subscribing, sometimes, other consumers are assigned partitions
+        # and start consuming before all consumers have been assigned a partition.
+        consumer.assign([TopicPartition(topic = topic, partition = num)])
         keys = dict()
 
         def process(msg):
@@ -93,14 +93,6 @@ if __name__ == "__main__":
                     keys[key] = 1
                 value = msg.value().decode("utf-8")
                 logging.info(f"Consumer {consumer.assignment()[0].partition} received ({key}, {value})")
-
-        # Get the partition number assigned to this consumer
-        while len(consumer.assignment()) == 0:
-            if run:
-                msg = consumer.poll(1.0)
-                if msg:
-                    process(msg)
-        num = consumer.assignment()[0].partition
 
         # Main consume loop
         while True:
@@ -125,9 +117,7 @@ if __name__ == "__main__":
         for thread in threads:
             thread.join()
 
-    producer = Producer({"bootstrap.servers": server
-        # ,"partitioner": "consistent"
-    })
+    producer = Producer({"bootstrap.servers": server})
     users = ["eabara", "jsmith", "sgarcia", "jbernard", "htanaka", "awalther", "mscott", "dschrute", "jhalpert", "pbeesly", "jlevinson", "ehannon", "abernard", "tflenderson", "kmalone", "amartin", "shudson", "rhoward"]
     products = ["book", "alarm clock", "t-shirts", "gift card", "batteries"]
 
@@ -140,8 +130,8 @@ if __name__ == "__main__":
         run = True                                                  # global flag to keep threads running
 
         # Create list of consumer threads
-        threads = [threading.Thread(target = consumerThread, args = (config,), daemon = True)
-            for _ in range(numConsumers)]
+        threads = [threading.Thread(target = consumerThread, args = (num, config,), daemon = True)
+            for num in range(numPartitions)]
 
         # Start consumer threads
         for thread in threads:
@@ -205,6 +195,7 @@ if __name__ == "__main__":
     # ----------------------------------------
     #  Output
     # ----------------------------------------
+    logging.info(f"Writing key counts to {outputFile}.")
     with open(outputFile, "wt") as fl:
         fl.write(f"Key counts:\n")
         for trialNum in range(numTrials):
@@ -213,6 +204,10 @@ if __name__ == "__main__":
                 fl.write(f"        Partition {partitionNum}:\n")
                 for k, v in sorted(keyCounts.items()):
                     fl.write(f"            {k}: {v}\n")
+
+
+
+    logging.info("All done.")
 
     # NOTE: Refer to partitioner entry in
     # https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md for

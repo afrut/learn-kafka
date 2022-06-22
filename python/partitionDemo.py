@@ -17,14 +17,12 @@ if __name__ == "__main__":
     numPartitions = 5                                           # number of partitions in topic
     group = "learn.partition.consumers"                         # group name for consumers
     numConsumers = 5                                            # number of consumers to start
-    ts = 2                                                      # seconds to sleep when consumers receive no messages
-    run = True                                                  # global flag to keep threads running
     numRecords = 10                                             # number of records to produce per flush
-    runTime = 10                                                # number of seconds to continually produce
+    runTime = 5                                                 # number of seconds to continually produce
     init = True                                                 # delete and re-create topic
     lock = threading.Lock()                                     # lock for output dictionary partitionKeyCounts
-    filepath = ".\\txt\\learn.partition.counts.txt"             # text file containing key counts
-    partitionKeyCounts = {}                                     # dictionary of key counts per partition
+    numTrials = 5                                               # number of trials to execute
+    trials = list()                                             # list containing partition count for each trial
 
     # ----------------------------------------
     #  Initialization
@@ -34,13 +32,8 @@ if __name__ == "__main__":
     datefmt = "%Y-%m-%d %H:%M:%S"
     logging.basicConfig(format = fmt, level = logging.INFO, datefmt = datefmt)
 
-    # Empty the file of key counts
-    with open(filepath, "wt") as fl:
-        fl.write("")
-
     # Create admin client
     ac = AdminClient({"bootstrap.servers": server
-        # , "partitioner": "consistent"
     })
 
     # Try to delete the topic
@@ -70,7 +63,7 @@ if __name__ == "__main__":
     logging.info(f"Topic \"{topic}\" created with {numPartitions} partitions.")
 
     # ----------------------------------------
-    #  Consumer
+    #  Consumer Configuration
     # ----------------------------------------
     config = {"bootstrap.servers": server
         , "group.id": group
@@ -119,55 +112,73 @@ if __name__ == "__main__":
                 logging.info(f"Consumer for partition {num} closed.")
                 break
 
-    # Create list of consumer threads
-    threads = [threading.Thread(target = consumerThread, args = (config,), daemon = True)
-        for _ in range(numConsumers)]
-
-    # Start consumer threads
-    for thread in threads:
-        thread.start()
-
     # ----------------------------------------
-    #  Producer
+    #  Producer Configuration
     # ----------------------------------------
     # Function to stop all threads
-    def stop():
+    def stop(threads):
         logging.info("Terminating threads.")
         global run
         run = False
         for thread in threads:
             thread.join()
 
-    producer = Producer({"bootstrap.servers": server, "partitioner": "consistent"})
+    producer = Producer({"bootstrap.servers": server
+    })
     users = ["eabara", "jsmith", "sgarcia", "jbernard", "htanaka", "awalther", "mscott", "dschrute", "jhalpert", "pbeesly", "jlevinson", "ehannon", "abernard", "tflenderson", "kmalone", "amartin", "shudson", "rhoward"]
     products = ["book", "alarm clock", "t-shirts", "gift card", "batteries"]
 
-    # Wait until Ctrl + c is pressed to terminate all threads and close all
-    # consumers
-    now = datetime.datetime.now()
-    try:
-        while run:
-            for _ in range(numRecords):
-                producer.produce(
-                    topic = topic
-                    , value = random.choice(products)
-                    , key = random.choice(users)
-                    # , partition = "consistent"
-                )
-            producer.flush()
-            if (datetime.datetime.now() - now).total_seconds() >= runTime:
-                break
-    except KeyboardInterrupt:
-        pass
-    finally:
-        stop()
+    # ----------------------------------------
+    #  Execution
+    # ----------------------------------------
+    for tn in range(numTrials):
+        now = datetime.datetime.now()
+        partitionKeyCounts = {}                                     # dictionary of key counts per partition
+        run = True                                                  # global flag to keep threads running
 
-    # Print count of keys in each partition
+        # Create list of consumer threads
+        threads = [threading.Thread(target = consumerThread, args = (config,), daemon = True)
+            for _ in range(numConsumers)]
+
+        # Start consumer threads
+        for thread in threads:
+            thread.start()
+
+        # Continuously produce threads for a specified amount of time
+        try:
+            while run:
+                for _ in range(numRecords):
+                    producer.produce(
+                        topic = topic
+                        , value = random.choice(products)
+                        , key = random.choice(users)
+                    )
+                producer.flush()
+                if (datetime.datetime.now() - now).total_seconds() >= runTime:
+                    break
+        except KeyboardInterrupt:
+            pass
+        finally:
+            stop(threads)
+            trials.append(partitionKeyCounts)
+
+    # ----------------------------------------
+    #  Output Assertion
+    # ----------------------------------------
+    for partitionKeyCounts in trials:
+        for partition, keyCounts in partitionKeyCounts:
+            keys = keyCounts.keys()
+
+    # ----------------------------------------
+    #  Display
+    # ----------------------------------------
     logging.info(f"Partition key counts:")
-    for partitionNum, keyCounts in sorted(partitionKeyCounts.items()):
-        logging.info(f"    {partitionNum}")
-        for key_, value_ in keyCounts.items():
-            logging.info(f"        {key_}: {value_}")
+    for trialNum in range(numTrials):
+        logging.info(f"    {trialNum}----------------------------------------")
+        for partitionNum, keyCounts in sorted(trials[trialNum].items()):
+            logging.info(f"        {partitionNum}:")
+            for key_, value_ in sorted(keyCounts.items()):
+                logging.info(f"            {key_}: {value_}")
 
     logging.info("Done.")
 

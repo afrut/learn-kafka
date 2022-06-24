@@ -1,6 +1,7 @@
 $arrPath = @(
 "C:\WINDOWS\system32",
 "C:\WINDOWS\system32\wbem",
+"C:\Program Files\PowerShell\7",
 "D:\Python\Python39\Scripts\",
 "D:\Python\Python39\",
 "D:\kafka_2.13-3.1.0\bin\windows",

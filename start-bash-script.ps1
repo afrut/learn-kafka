@@ -2,7 +2,6 @@
 param (
     $WindowTitle
     ,$Script
-    ,$Arguments
 )
 $Host.UI.RawUI.WindowTitle = $WindowTitle
-bash $Script $Arguments
+bash $Script $args

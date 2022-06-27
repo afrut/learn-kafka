@@ -1,7 +1,6 @@
 # Starts a new powershell process
 param (
-    $WindowTitle
-    ,$Script
-    ,$Arguments
+    [string]$WindowTitle
+    ,[string]$Script
 )
-Start-Process pwsh -ArgumentList "-NoExit start-bash-script.ps1 $WindowTitle $Script $Arguments"
+Start-Process pwsh -ArgumentList "-NoExit start-bash-script.ps1 $WindowTitle $Script $args"

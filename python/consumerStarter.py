@@ -39,16 +39,14 @@ if __name__ == '__main__':
             logging.info(f"Consumer is assigned {len(partitions)} partitions:")
             for partition in partitions:
                 logging.info(f"    {partition.partition}")
-        # logging.info(f"Consumer {consumer.")
-        # print(type(consumer.assignment()))
-        # print(type(partitions[0]))
-        # partition = partitions[0]
-        # print(f"partition.error[{type(partition.error)}] = {partition.error}")
-        # print(f"partition.offset[{type(partition.offset)}] = {partition.offset}")
-        # print(f"partition.partition[{type(partition.partition)}] = {partition.partition}")
-        # print(f"partition.topic[{type(partition.topic)}] = {partition.topic}")
-        # for x in dir(partitions[0]):
-        #     print(x)
+
+    # Function callback when a rebalance is triggered
+    def revokeCallback(consumer, partitions):
+        global lock
+        with lock:
+            logging.info(f"Consumer had {len(partitions)} partitions revoked:")
+            for partition in partitions:
+                logging.info(f"    {partition.partition}")
 
     # Function to create consumer threads
     def consumerThread(config: dict, stop: threading.Event):
@@ -56,7 +54,9 @@ if __name__ == '__main__':
         # Manually assign a partition to the consumer instead of subscribing.
         # When subscribing, sometimes, other consumers are assigned partitions
         # and start consuming before all consumers have been assigned a partition.
-        consumer.subscribe([topic], on_assign = assignCallback)
+        consumer.subscribe([topic]
+            ,on_assign = assignCallback
+            ,on_revoke = revokeCallback)
         keys = dict()
 
         # Function to process messages

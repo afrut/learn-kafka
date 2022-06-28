@@ -3,7 +3,11 @@ from confluent_kafka.admin import AdminClient
 from confluent_kafka.admin import NewTopic
 from time import sleep
 
-def initTopic(topicName: str, server: str = "[::1]:9092", ac: AdminClient = None):
+def initTopic(topicName: str
+    , server: str = "[::1]:9092"
+    , partitions: int = 1
+    , ac: AdminClient = None):
+
     # Create an admin client. Specify server.
     if ac is None:
         ac = AdminClient({"bootstrap.servers": server})
@@ -19,7 +23,7 @@ def initTopic(topicName: str, server: str = "[::1]:9092", ac: AdminClient = None
     # Errors can come up due to topic deletion being incomplete.
     while True:
         try:
-            dctFuture = ac.create_topics([NewTopic(topicName, 1)], operation_timeout = 60)
+            dctFuture = ac.create_topics([NewTopic(topicName, num_partitions = partitions)], operation_timeout = 60)
             future = dctFuture[topicName]
             future.result()     # Block until topic has been created
             break

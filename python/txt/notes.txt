@@ -10,3 +10,8 @@ messages in the batch even when the queue is not full.
         - python producerSimple.py --num_records 10000
     - Produce 10 records with polling and observe that the consumer receives messages
         - python producerSimple.py --num_records 10 --poll
+
+
+
+View offsets of a consumer group
+./kafka-consumer-groups.sh --bootstrap-server [::1]:9092 --describe --group "learn.partition.consumers"

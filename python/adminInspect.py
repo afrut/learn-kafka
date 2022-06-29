@@ -1,5 +1,6 @@
+#exec(open("adminInspect.py").read())
 #python adminInspect.py.py
-from confluent_kafka.admin import AdminClient
+from confluent_kafka.admin import AdminClient, ConfigResource
 if __name__ == "__main__":
     ac = AdminClient({"bootstrap.servers": "[::1]:9092"})
     spc = "    "
@@ -44,3 +45,26 @@ if __name__ == "__main__":
     print(f"{spc}replicas: {type(p.replicas).__name__} = {p.replicas}")
     print(f"{spc}isrs: {type(p.isrs).__name__} = {p.isrs}")
     print(f"{spc}error: {type(p.error).__name__} = {p.error}")
+    print("")
+
+
+
+    gms = ac.list_groups()
+    print("----------------------------------------")
+    print(f"  GroupMetadata: {type(gms[0])}")
+    print("----------------------------------------")
+    for gm in gms:
+        if len(gm.members) > 0:
+            print(f"{spc}id = {gm.id}")
+            print(f"{spc:8}gm.broker = {gm.broker}")
+            print(f"{spc:8}gm.error = {gm.error}")
+            print(f"{spc:8}gm.state = {gm.state}")
+            print(f"{spc:8}gm.protocol_type = {gm.protocol_type}")
+            print(f"{spc:8}gm.protocol = {gm.protocol}")
+            print(f"{spc:8}gm.members =")
+            for member in gm.members:
+                print(f"{spc:12}member.id = {member.id}")
+                print(f"{spc:12}member.client_id = {member.client_id}")
+                print(f"{spc:12}member.client_host = {member.client_host}")
+                print(f"{spc:12}member.metadata = {member.metadata}")
+                print(f"{spc:12}member.assignment = {member.assignment}")

@@ -50,7 +50,6 @@ if __name__ == '__main__':
                 print("Consumed event from topic {topic}: key = {key:12} value = {value:12}".format(
                     topic=msg.topic(), key=key, value=msg.value().decode('utf-8')))
     except KeyboardInterrupt:
-        print(consumer.assignment())
         pass
     finally:
         # Leave group and commit final offsets

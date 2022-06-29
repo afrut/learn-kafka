@@ -9,6 +9,7 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("-s", "--server", default = "[::1]:9092")
     parser.add_argument("-r", "--reset", action = "store_true")
+    parser.add_argument("-t", "--topic", type = str, default = "test")
     args = parser.parse_args()
 
     # Create Consumer instance
@@ -26,7 +27,7 @@ if __name__ == '__main__':
             consumer.assign(partitions)
 
     # Subscribe to topic
-    topics = ["test"]
+    topics = [args.topic]
     consumer.subscribe(topics, on_assign = reset_offset)
 
     # Poll for new messages from Kafka and print them.

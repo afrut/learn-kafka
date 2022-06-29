@@ -39,7 +39,7 @@ if __name__ == "__main__":
     N = len(lines) - 1
 
     # Produce data by selecting random values from these lists.
-    topic = "lines_of_text"
+    topic = "lines-of-text"
 
     initTopic(topic)
 

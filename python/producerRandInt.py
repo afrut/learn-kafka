@@ -34,7 +34,7 @@ if __name__ == "__main__":
             print(f"    {datetime.now()}: Sent {isent}")
 
     # Produce data by selecting random values from these lists.
-    topic = "rand_ints"
+    topic = "rand-ints"
 
     initTopic(topic)
 

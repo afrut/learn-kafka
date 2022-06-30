@@ -28,19 +28,21 @@ if __name__ == "__main__":
     consumer.subscribe([topic])
 
     def process(msgs: list):
-        for msg in msgs:
-            if msg is None:
-                logging.info("Waiting...")
-            elif msg.error():
-                logging.error(f"{msg.error()}")
-            else:
-                key = msg.key()
-                if key:
-                    key = key.decode("utf-8")
-                value = msg.value().decode("utf-8")
-                logging.info(f"Received ({key}, {value})")
         if len(msgs) > 0:
+            for msg in msgs:
+                if msg is None:
+                    logging.info("Waiting...")
+                elif msg.error():
+                    logging.error(f"{msg.error()}")
+                else:
+                    key = msg.key()
+                    if key:
+                        key = key.decode("utf-8")
+                    value = msg.value().decode("utf-8")
+                    logging.info(f"Received ({key}, {value})")
             logging.info(f"Processed {len(msgs)} messages")
+        else:
+            logging.info("No messages")
 
     try:
         while True:

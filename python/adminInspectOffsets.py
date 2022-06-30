@@ -10,6 +10,29 @@ import time
 from confluent_kafka import Consumer, TopicPartition
 from confluent_kafka.admin import AdminClient
 
+def printOffsets(consumer, tps):
+    # Get offset of last message consumed + 1
+    poss = consumer.position(tps)
+
+    # Get watermark offsets for each partition.
+    # Low offset = earliest offset in topic.
+    # High offset = latest offset in topic.
+    wos = {tp.partition: consumer.get_watermark_offsets(tp) for tp in tps}
+
+    # Get offsets committed for each partition.
+    ctds = consumer.committed(tps)
+
+    print(f"Partition Offsets:")
+    for tp in tps:
+        pnum = tp.partition
+        pos = poss[pnum].offset     # last consumed + 1
+        lo = wos[pnum][0]           # earliest
+        hi = wos[pnum][1]           # latest
+        ctd = ctds[pnum].offset     # last committed offset
+        last = tp.offset            # last consumed
+        print(f"{' ':4}{pnum}, consumer.position() = {pos}, lo = {lo}, hi = {hi}, committed = {ctd}, last consumed = {last}")
+        
+
 if __name__ == "__main__":
     server = "[::1]:9092"
     group = "consumerSimple"
@@ -33,9 +56,7 @@ if __name__ == "__main__":
             sp.call("cls", shell = True)
             wos = {tp.partition: consumer.get_watermark_offsets(tp) for tp in tps}
             ctds = consumer.committed(tps)
-            for ctd in ctds:
-                p = ctd.partition
-                logging.info(f"partition = {p}, low = {wos[p][0]}, high = {wos[p][1]}, committed = {ctd.offset}")
+            printOffsets(consumer, tps)
             time.sleep(1)
     except KeyboardInterrupt:
         pass

@@ -16,3 +16,10 @@ messages in the batch even when the queue is not full.
 View offsets of a consumer group
 ./kafka-consumer-groups.sh --bootstrap-server [::1]:9092 --describe --all-groups
 ./kafka-consumer-groups.sh --bootstrap-server [::1]:9092 --describe --group "learn.partition.consumers"
+
+
+View offsets for a topic
+./kafka-get-offsets.sh --bootstrap-server [::1]:9092 --topic test
+
+List topics for a broker
+./kafka-topics.sh --bootstrap-server [::1]:9092 --list

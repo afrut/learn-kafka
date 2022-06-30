@@ -7,6 +7,8 @@ from argparse import ArgumentParser, FileType
 from configparser import ConfigParser
 from confluent_kafka import Producer
 
+from initTopic import initTopic
+
 if __name__ == "__main__":
     # Parse the command line.
     parser = ArgumentParser()
@@ -17,6 +19,8 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--topic", type = str, default = "test")
     parser.add_argument("-c", "--continuous", action = "store_true")
     parser.add_argument("-st", "--sleep", type = int, default = 2)
+    parser.add_argument("-i", "--init", action = "store_true")
+    parser.add_argument("-np", "--num_partitions", type = int, default = 1)
     args = parser.parse_args()
 
     # Create Producer instance
@@ -36,6 +40,10 @@ if __name__ == "__main__":
     topic = args.topic
     user_ids = ['eabara', 'jsmith', 'sgarcia', 'jbernard', 'htanaka', 'awalther']
     products = ['book', 'alarm clock', 't-shirts', 'gift card', 'batteries']
+
+    # Delete and re-create topic
+    if args.init:
+        initTopic(topic, partitions = args.num_partitions)
 
     try:
         while True:

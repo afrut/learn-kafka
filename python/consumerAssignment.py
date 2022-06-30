@@ -1,7 +1,9 @@
 #python consumerMisc.py
 import logging
+import threading
 from argparse import ArgumentParser
 from confluent_kafka import Consumer, TopicPartition
+from confluent_kafka.admin import AdminClient
 from time import sleep
 
 from initTopic import initTopic
@@ -14,16 +16,17 @@ if __name__ == "__main__":
 
     parser = ArgumentParser()
     parser.add_argument("-i", "--init", action = "store_true")
-    parser.add_argument("-to", "--timeout", type = float, default = 0.00001)
+    parser.add_argument("-to", "--timeout", type = float, default = 0.001)
+    parser.add_argument("-np", "--num_partitions", type = int, default = 7)
     args = parser.parse_args()
     timeout = args.timeout
 
-    fmt = "%(asctime)s: %(message)s"
-    datefmt = "%Y-%m-%D %H:%M:%S"
+    fmt = "%(asctime)s.%(msecs)03d: %(message)s"
+    datefmt = "%Y-%m-%D %H:%M:%S:"
     logging.basicConfig(format = fmt, level = logging.INFO, datefmt = datefmt)
 
     if args.init:
-        initTopic(topic)
+        initTopic(topic, partitions = args.num_partitions)
 
     def process(msgs):
         N = len(msgs)
@@ -44,20 +47,16 @@ if __name__ == "__main__":
             logging.info("No messages")
 
     def assigned(consumer, partitions):
-        logging.info("assigned() callback executed")
+        logging.info(f"assigned() callback executed")
 
     config = {"bootstrap.servers": server
         ,"group.id": group
         ,"auto.offset.reset": "earliest"}
     consumer = Consumer(config)
     consumer.subscribe([topic], on_assign = assigned)
-    # consumer.subscribe([topic])
 
     # ----------------------------------------
-    #  Consumer Assignment - Upon first call to poll() or consume(), consumer
-    #  contacts the broker for assignment of partitions. If poll() or consume()
-    #  is too short, consumer may not have received assignment before executing
-    #  the next statement.
+    #  Consumer Assignment
     # ----------------------------------------
     try:
         # Ensure that consumer has been assigned partitions
@@ -71,11 +70,11 @@ if __name__ == "__main__":
             logging.info(f"{' ':4}Partition {tp.partition}")
     except KeyboardInterrupt:
         pass
-
-
-
-
-
-
+    # NOTE: Upon first call to poll() or consume(), consumer  contacts the
+    # broker for assignment of partitions. If poll() or consume() is too short,
+    # consumer may not have received assignment before executing the next
+    # statement. Some commands need partition assignment to be complete before
+    # properly executing, ie. (seek(), )
+    
     consumer.close()
     logging.info("Consumer closed.")

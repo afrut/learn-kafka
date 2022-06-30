@@ -60,7 +60,6 @@ if __name__ == "__main__":
     # ----------------------------------------
     try:
         # Ensure that consumer has been assigned partitions
-        consumer.poll(timeout)
         while(len(consumer.assignment()) == 0):
             logging.info("Consumer has no assignment yet")
             consumer.poll(timeout)
@@ -70,11 +69,10 @@ if __name__ == "__main__":
             logging.info(f"{' ':4}Partition {tp.partition}")
     except KeyboardInterrupt:
         pass
-    # NOTE: Upon first call to poll() or consume(), consumer  contacts the
-    # broker for assignment of partitions. If poll() or consume() is too short,
-    # consumer may not have received assignment before executing the next
-    # statement. Some commands need partition assignment to be complete before
-    # properly executing, ie. (seek(), )
+    # NOTE: Upon call to subscribe(), consumer receives partition assignments
+    # from broker. Some commands need partition assignment to be complete before
+    # properly executing, ie. (seek(), ). An error is raised when such methods
+    # are called before partition assignment completes.
     
     consumer.close()
     logging.info("Consumer closed.")

@@ -10,20 +10,20 @@ import time
 from confluent_kafka import Consumer, TopicPartition
 from confluent_kafka.admin import AdminClient
 
-def printOffsets(consumer, tps):
+def printOffsets(consumer, topic_partitions):
     # Get offset of last message consumed + 1
-    poss = consumer.position(tps)
+    poss = consumer.position(topic_partitions)
 
     # Get watermark offsets for each partition.
     # Low offset = earliest offset in topic.
     # High offset = latest offset in topic.
-    wos = {tp.partition: consumer.get_watermark_offsets(tp) for tp in tps}
+    wos = {tp.partition: consumer.get_watermark_offsets(tp) for tp in topic_partitions}
 
     # Get offsets committed for each partition.
-    ctds = consumer.committed(tps)
+    ctds = consumer.committed(topic_partitions)
 
     print(f"Partition Offsets:")
-    for tp in tps:
+    for tp in topic_partitions:
         pnum = tp.partition
         pos = poss[pnum].offset     # last consumed + 1
         lo = wos[pnum][0]           # earliest
@@ -54,8 +54,6 @@ if __name__ == "__main__":
     try:
         while True:
             sp.call("cls", shell = True)
-            wos = {tp.partition: consumer.get_watermark_offsets(tp) for tp in tps}
-            ctds = consumer.committed(tps)
             printOffsets(consumer, tps)
             time.sleep(1)
     except KeyboardInterrupt:

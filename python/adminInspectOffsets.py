@@ -29,8 +29,7 @@ def printOffsets(consumer, topic_partitions):
         lo = wos[pnum][0]           # earliest
         hi = wos[pnum][1]           # latest
         ctd = ctds[pnum].offset     # last committed offset
-        last = tp.offset            # last consumed
-        print(f"{' ':4}{pnum}, consumer.position() = {pos}, lo = {lo}, hi = {hi}, committed = {ctd}, last consumed = {last}")
+        print(f"{' ':4}{pnum}, consumer.position() = {pos}, lo = {lo}, hi = {hi}, committed = {ctd}")
         
 
 if __name__ == "__main__":

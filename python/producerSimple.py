@@ -1,6 +1,7 @@
 #exec(open("producerSimple.py").read())
 #python producerSimple.py --num_records 10 --poll
 #python producerSimple.py --continuous -t "learn.consumerCallback"
+#python producerSimple.py --continuous --sleep 10 --flush
 import time
 from random import choice
 from argparse import ArgumentParser, FileType

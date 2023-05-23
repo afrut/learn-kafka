@@ -1,0 +1,7 @@
+* Consumers, auto commits, manual commits, monitoring commits.
+    auto.commit.enable
+    auto.commit.interval.ms
+
+
+* Read kafka the definitive guide and try everything out with the Python package confluent_kafka
+* Continue Chapter 4 commit current offset
